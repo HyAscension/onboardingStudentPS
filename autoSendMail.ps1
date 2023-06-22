@@ -42,3 +42,60 @@ $appRegistration = @{
 $msalToken = Get-msaltoken @appRegistration -ForceRefresh
 
 $studentList = Import-Csv -Path "Path\File.csv"
+
+# Email content for each mail
+foreach ($userName in $studentList){
+    $requestBody = @{
+        "message"         = [PSCustomObject]@{
+            "subject"      = "Subject Email"
+            "body"         = [PSCustomObject]@{
+                "contentType" = "Text"
+                "content"     = 
+
+# No indentation to avoid indents in email
+
+"Greetings Person,
+
+Here's the bulk of content
+
+Warm regards,
+
+Name"
+
+# End of content area
+
+            }
+            "toRecipients" = @(
+                # Hash table for recipients
+                [PSCustomObject]@{
+                    "emailAddress" = [PSCustomObject]@{
+                        "address" = $userName.User
+                    }
+                }
+            )
+
+            # Code for attachments
+            "attachments"  = @(
+                @{
+                    "@odata.type"  = "#microsoft.graph.fileAttachment"
+                    "name"         = "TextFile"
+                    "contentType"  = "text/plain"
+                    "contentBytes" = $attachementBytes
+                }
+            )
+        }
+        "saveToSentItems" = "true"
+    }
+
+    # Make the graph request
+    $request = @{
+        "Headers"     = @{Authorization = $msalToken.CreateAuthorizationHeader() }
+        "Method"      = "Post"
+        "Uri"         = "Link"
+        "Body"        = $requestBody | ConvertTo-Json -Depth 5
+        "ContentType" = "application/json"
+    }
+
+    # Execute
+    Invoke-RestMethod @request
+}
